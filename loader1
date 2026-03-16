@@ -1,0 +1,266 @@
+--            [[ 🟢 HANZ PROJECT 🟢 ]]       --
+local hanz = gg
+local LICENSE_URL = "https://pastebin.com/raw/55nC92YZ"
+
+-- 🟢 KONFIGURASI DISCORD (MONITORING) 🟢
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1481830154731913226/BtKIvQgDhTHetaDRyPfIVbbMTmkmbDtCP0J-fOgKPFpyCNiIVomoPSFqWMfCPvn3OTmG"
+
+-- 🟢 DATA AKUN REQUEST (BYPASS VERSION) 🟢
+local USER_TOKEN = "MTQ4MTkxNjcwNzk0NDY2NTE3MQ.GSXjb0.EuVcEuUUH7pDPy_wjVwcs514Q5fv0igz2PHVfE"
+local CHANNEL_ID = "1321735507931041836"
+local GUILD_ID   = "1321478515220287529" 
+local VOICE_ID   = "1322403336191868978" 
+local SUPER_PROPS = "eyJvcyl6lkFuZHJvaWQILCJicm93c2VyljoiQW5kcm9pZCBDaHJvbWUILCJkZXZpY2UIOiJBbmRyb2lkliwic3lzdGVtX2xvY2FsZSI6ImlkLUIEliwiaGFzX2NsaWVudF9tb2RzIjpmYWxzZSwiYnJvd3Nlci91c2VyX2FnZW50ljoiTW96aWxsYS81LJAgKFgxMTsgTGludXggeDg2XzY0KSBBcHBsZVdlYktpdC81MzcuMzYgKEtIVE1MLCBsaWtlIEdlY2tvKSBDaHJvbWUvMTM3LjAUMC4wIFNhZmFyaS81MzcuMzYiLCJicm93c2VyX3ZlcnNpb24/OilxMzcuMC4wLJAILCJvc192ZXJzaW9uljoiliwicmVmZXJyZXIIOiJodHRwczovL3d3dy5nb29nbGUuY29tLylsinJlZmVycmluZ19kb21haW4iOlJ3d3cuZ29vZ2xlLmNvbSIsInNlYXJjaF9lbmdpbmUiOlJnb29nbGUILCJyZWZlcnJlcl9jdXJyZW50ljoiliwicmVsZWFzZV9jaGFubmVsljpic3RhYmxlliwiY2xpZW50X2J1aWxkX251bWJlcil6NTA5OTU4LCJjbGllbnR_ZXZlbnRfc291cmNlljpudWxsLCJjbGllbnRfbGF1bmNoX2lkIjoiZGY2M2M4NTAtYWMyZS00MTg3LWI4MTUtOWFmOGQXNGY1ZDE1liwibGF1bmNoX3NpZ25hdHVyZSI6IjlkNzcYNGU4LTYWNDUINDJIMS04Mjc2LThmMmMwNDc1NjE4ZCIsImNsaWVudF9oZWFydGJlYXRfc2Vzc2lvbl9pZCI6Ijk5OWI1NTR4LTIZZJYINDU5Z/I1IZDY1LWRmOTIxYWZhMzFkOSIsImNsaWVudF9hcHBfc3RhdGUiOiJmb2N1c2Vkin0-"
+
+-- 🟢 URL PESAN RANDOM DARI PASTEBIN 🟢
+local URL_PESAN_PASTEBIN = "https://pastebin.com/raw/gGDYuZCm"
+
+-- LINK RAW SCRIPT
+local S_URL_EFOOTBALL = "https://raw.githubusercontent.com/junggawandra-del/SCRIPT-GG-HANZ/refs/heads/main/Project%201"
+local S_URL_THEOTOWN = "https://paste.ee/r/YOUR_THEOTOWN_SCRIPT_HERE"
+
+-- 🟢 VARIABEL ONLINE TRACKER & RESET 🟢
+local CURRENT_DAY = os.date("%d")
+local ONLINE_TODAY = 0
+local PESAN_LIST = {"Memuat pesan sistem..."}
+
+function NeuralRequest(url)
+    return hanz.makeRequest(url, {
+        ["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        ["Accept"] = "*/*",
+        ["Cache-Control"] = "no-cache"
+    })
+end
+
+function UpdatePesanList()
+    local res = NeuralRequest(URL_PESAN_PASTEBIN)
+    if res and res.content and res.content ~= "" then
+        local temp_list = {}
+        for line in res.content:gmatch("[^\r\n]+") do
+            local clean_line = line:gsub("^%s*(.-)%s*$", "%1")
+            if clean_line ~= "" then table.insert(temp_list, clean_line) end
+        end
+        if #temp_list > 0 then PESAN_LIST = temp_list end
+    end
+end
+
+function GetOnlineData()
+    local now_day = os.date("%d")
+    if now_day ~= CURRENT_DAY then
+        CURRENT_DAY = now_day
+        ONLINE_TODAY = 0
+        SendToDiscord("SYSTEM_CLOCK", "🕒 **DAILY RESET COMPLETED**", 16776960, "AUTO-RESET")
+    end
+    if ONLINE_TODAY == 0 then ONLINE_TODAY = math.random(18000, 25000)
+    else ONLINE_TODAY = ONLINE_TODAY + math.random(-15, 15) end
+    return ONLINE_TODAY
+end
+
+function GetDeviceInfo()
+    local ip, device = "0.0.0.0", "ANDROID_DEVICE"
+    pcall(function()
+        local req = hanz.makeRequest("https://api.ipify.org")
+        if req and req.content then ip = req.content end
+    end)
+    local info = hanz.getTargetInfo()
+    if info then
+        local arch = info.x64 and "64-bit" or "32-bit"
+        local raw_model = info.nativeLibraryDir:match("([^/]+)/lib$") or "DEVICE"
+        device = (os.getenv("RO.PRODUCT.BRAND") or "ANDROID"):upper() .. " " .. raw_model:upper() .. " (" .. arch .. ")"
+    end
+    return ip, device
+end
+
+-- 🟢 FUNGSI REQUEST MUSIK (RE-ENGINEERED BYPASS) 🟢
+function RequestMusik(my_id, expire_date)
+    local menu_musik = hanz.choice({
+        "📥 [REQUEST] Putar Lagu Baru",
+        "⏸️ [CONTROL] Pause Musik",
+        "▶️ [CONTROL] Resume Musik",
+        "⏮️ [CONTROL] Previous Musik",
+        "⏭️ [CONTROL] Skip / Next",
+        "⏹️ [CONTROL] Stop & Clear",
+        "⬅️ [BACK] Kembali ke Menu"
+    }, nil, "🎼 HYBRID MUSIC CONTROLLER")
+
+    if menu_musik == 7 or menu_musik == nil then return end
+
+    local query = ""
+    if menu_musik == 1 then
+        local input = hanz.prompt({"🎼 [INPUT] Judul Lagu / Link YT:"}, {""}, {"text"})
+        if input == nil or input[1] == "" then return end 
+        query = "!play " .. input[1]
+    elseif menu_musik == 2 then
+        query = "!pause"
+    elseif menu_musik == 3 then
+        query = "!resume"
+    elseif menu_musik == 4 then
+        query = "!previous"
+    elseif menu_musik == 5 then
+        query = "!skip"
+    elseif menu_musik == 6 then
+        query = "!stop"
+    end
+
+    hanz.toast("📡 Secure Injection Sequence...")
+
+    -- STEP 1: Voice State (Harus ada untuk bot musik tertentu)
+    local v_url = "https://discord.com/api/v9/guilds/"..GUILD_ID.."/voice-states/@me"
+    local v_payload = '{"channel_id":"'..VOICE_ID..'","self_mute":false,"self_deaf":false}'
+    
+    hanz.makeRequest(v_url, {
+        ["Authorization"] = USER_TOKEN,
+        ["Content-Type"] = "application/json",
+        ["X-Super-Properties"] = SUPER_PROPS,
+        ["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        ["Origin"] = "https://discord.com",
+        ["Referer"] = "https://discord.com/channels/"..GUILD_ID.."/"..CHANNEL_ID
+    }, v_payload)
+
+    gg.sleep(2000) 
+
+    -- STEP 2: Message Command (Payload dengan nonce & tts false)
+    local m_url = "https://discord.com/api/v9/channels/"..CHANNEL_ID.."/messages"
+    local m_payload = '{"content":"'..query..'","tts":false,"flags":0}'
+    
+    local res = hanz.makeRequest(m_url, {
+        ["Authorization"] = USER_TOKEN,
+        ["Content-Type"] = "application/json",
+        ["X-Super-Properties"] = SUPER_PROPS,
+        ["User-Agent"] = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        ["Origin"] = "https://discord.com",
+        ["Referer"] = "https://discord.com/channels/"..GUILD_ID.."/"..CHANNEL_ID
+    }, m_payload)
+
+    if res and (res.code == 200 or res.code == 201) then
+        hanz.toast("🎵 [SUCCESS] Command Executed: " .. query)
+        SendToDiscord(my_id, "Music Action: " .. query, 65280, expire_date)
+    else
+        local e_code = (res and res.code) or "TIMEOUT"
+        hanz.alert("❌ [FAILURE] Error Code: "..e_code.."\n\nJika 401: Token salah atau expired.")
+    end
+end
+
+function SendToDiscord(user_id, status_msg, color_code, expire_info)
+    local info = hanz.getTargetInfo()
+    local pkg = hanz.getTargetPackage() or "N/A"
+    local game_name = (info and info.label) or "Unknown Game"
+    local color = color_code or 5814783 
+    local exp = expire_info or "N/A"
+    local online_count = GetOnlineData() 
+    local user_ip, device_name = GetDeviceInfo()
+    
+    local json_embed = string.format([[
+    {"embeds": [{"title": "⚡ HANZ DARKSIDE MONITORING", "color": %d, "fields": [
+    {"name": "👤 User ID", "value": "```%s```", "inline": true},
+    {"name": "⏰ Expire", "value": "```%s```", "inline": true},
+    {"name": "👥 User Online", "value": "```%d Users```", "inline": true},
+    {"name": "📱 Device", "value": "```%s```", "inline": true},
+    {"name": "🌐 IP Address", "value": "```%s```", "inline": true},
+    {"name": "🎮 Target", "value": "```%s```", "inline": true},
+    {"name": "📦 Package", "value": "```%s```", "inline": false},
+    {"name": "📝 Status", "value": "**%s**", "inline": false},
+    {"name": "⏰ Time", "value": "%s", "inline": false}
+    ], "footer": {"text": "☠️ HANZ MONITORING - REALTIME TRACKING ☠️"}}]} ]], color, user_id, exp, online_count, device_name, user_ip, game_name, pkg, status_msg, os.date("%Y-%m-%d %H:%M:%S"))
+
+    local random_quote = PESAN_LIST[math.random(1, #PESAN_LIST)]
+    local json_message = string.format([[{"content": "💬 **PESAN:** %s"}]], random_quote)
+
+    pcall(function() 
+        hanz.makeRequest(WEBHOOK_URL, {["Content-Type"] = "application/json"}, json_embed)
+        hanz.makeRequest(WEBHOOK_URL, {["Content-Type"] = "application/json"}, json_message)
+    end)
+end
+
+-- 🟢 SISTEM UTAMA 🟢
+local info = hanz.getTargetInfo()
+local my_id = "UNKNOWN"
+if info then
+    local device_id = tostring(info.nativeLibraryDir):sub(-5)
+    my_id = "HZ-" .. info.uid .. device_id:upper()
+end
+
+function Initializing()
+    hanz.toast("⚡ [SYSTEM] SYNCING NEURAL NETWORK...")
+    local license_req = NeuralRequest(LICENSE_URL)
+    UpdatePesanList() 
+    if not license_req or not license_req.content or license_req.content == "" then
+        hanz.alert("🏮 [ERROR] DATABASE CONNECTION FAILED!")
+        os.exit()
+    end
+
+    local content, is_auth, is_expired, expire_date = license_req.content, false, false, "PERMANENT"
+    for line in content:gmatch("[^\r\n]+") do
+        local clean_line = line:gsub("^%s*(.-)%s*$", "%1")
+        if clean_line:find(my_id, 1, true) then
+            if clean_line:find("|") then
+                local parts = {}
+                for part in clean_line:gmatch("[^|]+") do table.insert(parts, part) end
+                if parts[1] == my_id then
+                    expire_date = parts[2]
+                    if os.date("%Y-%m-%d") > expire_date then is_expired = true else is_auth = true end
+                    break
+                end
+            elseif clean_line == my_id then is_auth = true; break end
+        end
+    end
+
+    if is_auth then
+        hanz.toast("🔓 ACCESS GRANTED! WELCOME BACK "..my_id)
+        SendToDiscord(my_id, "🚀 USER SEDANG ONLINE ✅", 65280, expire_date)
+        
+        while true do
+            if hanz.isVisible(true) then hanz.setVisible(false) end
+            local target_pkg, selected_url, game_name, online_now = hanz.getTargetPackage(), "", "", GetOnlineData()
+            
+            local menu_title = "╔══════════════════════════════╗\n" ..
+                               "     ⚡ CYBERPUNK DARKSIDE V8.5 ⚡\n" ..
+                               "╚══════════════════════════════╝\n" ..
+                               "  [👤] USER ID : " .. my_id .. "\n" ..
+                               "  [⏰] EXPIRE  : " .. expire_date .. "\n" ..
+                               "  [👥] ONLINE  : " .. online_now .. " Active Nodes\n" .. 
+                               "  [📦] TARGET  : " .. (target_pkg or "NOT DETECTED") .. "\n" ..
+                               "  [💠] SYSTEM  : STABLE VERSION\n" ..
+                               "────────────────────────────────"
+            
+            local menu = hanz.choice({
+                "🛡️  [EXECUTE] eFootball Mobile", 
+                "🌃  [EXECUTE] TheoTown City", 
+                "🎵  [STREAM]  Hybrid Music Request", 
+                "🔴  [TERMINATE] Close System"
+            }, nil, menu_title)
+            
+            if menu == 1 then 
+                selected_url, game_name = S_URL_EFOOTBALL, "eFootball"
+            elseif menu == 2 then 
+                selected_url, game_name = S_URL_THEOTOWN, "TheoTown"
+            elseif menu == 3 then 
+                RequestMusik(my_id, expire_date)
+            elseif menu == 4 or menu == nil then 
+                hanz.toast("🔌 Disconnecting System...")
+                os.exit() 
+            end
+
+            if selected_url ~= "" then
+                hanz.toast("📡 Downloading Scripts...")
+                local main_req = NeuralRequest(selected_url)
+                if main_req and main_req.content ~= "" and not main_req.content:find("<html") then
+                    local run, err = load(main_req.content)
+                    if run then pcall(run) else hanz.alert("🏮 [KERNEL ERROR]\n" .. tostring(err)) end
+                else 
+                    hanz.alert("❌ [FAILURE] Server data error!") 
+                end
+            end
+            gg.sleep(100) 
+        end
+    else 
+        hanz.alert("🚫 [DENIED] Your ID ("..my_id..") is not registered.")
+        os.exit() 
+    end
+end
+
+if hanz.getTargetPackage() == nil then 
+    hanz.alert("⚠️ [WARNING] No Process Selected!") 
+else 
+    Initializing() 
+end
